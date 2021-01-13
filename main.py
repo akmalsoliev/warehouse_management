@@ -39,7 +39,7 @@ class main_window():
             self.amount = amount
             self.transactions = []
             self.transactions.append([datetime.datetime.utcnow(), self.amount])
-        
+    
         def add_amount(self, amount):
             for list_ in self.transactions:
                 for _, transaction in list_:
