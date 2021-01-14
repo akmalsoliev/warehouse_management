@@ -1,4 +1,5 @@
 """
+#1
 main
 DATE
 UNIQUE ID
@@ -7,6 +8,7 @@ TOTAL SALES
 MODIFY
 DETAILS OF TRANSACTIONS
 
+#2
 details of transactions
 ITEM CODE 
 ITEM NAME
@@ -18,40 +20,61 @@ COLOR NAME
 import datetime
 import sqlite3
 
-class main_window():
-    def __init__(self):
-        # db.execute('CREATE TABLE IF NOT EXISTS goods' \
-        #     '(material TEXT NOT NULL, length INTEGER NOT NULL, kg INTEGER NOT NULL,' \
-        #     ' color TEXT NOT NULL)')
-        db.execute('CREATE TABLE IF NOT EXISTS main_window' \
-            '(Unique_ID INTEGER PRIMARY KEY NOT NULL, Date TIMESTAMP NOT NULL, Client_Name TEXT NOT NULL, Total_Sales INTEGER NOT NULL)')
-        self.user_input = input("Client's name and amount (format: name, amount): ")
-        self.__name, self.__amount = self.user_input.split(', ')
-        self.client = self.Client(self.__name, int(self.__amount))
-        cursor = db.execute('SELECT Unique_ID FROM main_window ORDER BY Unique_ID DESC')
-        self.unique_id = cursor.fetchone()[0] + 1
-        db.execute('INSERT INTO main_window VALUES(?, ?, ?, ?)', (self.client.transactions[0][0], int(self.unique_id), self.client.name, self.client.transactions[0][1]))
+def initializer():
+    db = Database_Manager('database.sqlite')
+    db.activate_connection()
+    columns_in_main = ['Date', 'Client_Name', 'Total_Sales']
+    db.create_table('MAIN', columns_in_main)
+    client_name_input = "Jack"#input('Please enter client name: ')
+    client_amount_input = int(1200)#int(input('Price of a sale: '))
+    insert_values = [datetime.datetime.utcnow(), client_name_input, client_amount_input]
+    print(insert_values)
+    db.add_to_database('MAIN', columns_in_main, insert_values)
 
+    # commit_database = input('Would you like to commit all the changes?')
+    # if commit_database.upper() == 'YES':
+    db.commit_and_close()
 
-    class Client():
-        def __init__(self, name, amount):
-            self.name = name
-            self.amount = amount
-            self.transactions = []
-            self.transactions.append([datetime.datetime.utcnow(), self.amount])
-    
-        def add_amount(self, amount):
-            for list_ in self.transactions:
-                for _, transaction in list_:
-                    sales_total += transaction
+class Database_Manager():
+
+    """The following database manager does has a vinurability, 
+    utilize table_name and list_of_objects with caution as it 
+    is vunerable to SQL Injection attack!
+    DO NOT LET the user set up table_name, columns_in_main and list_of_objects!"""
+
+    def __init__(self, database_name, list_of_objects = None):
+        self.database_name = database_name
+        self.database = None
+        self.list_of_objects = list_of_objects
+
+    def activate_connection(self):
+        self.database = sqlite3.connect(self.database_name)
+
+    def create_table(self, table_name, list_of_objects):
+        self.database.execute(f'CREATE TABLE IF NOT EXISTS {table_name} (ID INTEGER PRIMARY KEY AUTOINCREMENT)')
+        try:
+            for obj in list_of_objects:
+                self.database.execute(f'ALTER TABLE {table_name} ADD COLUMN {obj}')
+        except:
+            pass
+
+    def add_to_database(self, table_name, column_list, insert_values):
+        placeholder = ','.join('?' * len(column_list))
+        columns = ', '.join(column_list)
+        self.database.execute(f"INSERT INTO {table_name}({columns}) VALUES({placeholder})", (*insert_values,))
+  
+    def check_if_exists(self, table_name, check_object, column_name):
+        if self.database.execute(f'SELECT ? FROM {table_name} WHERE ? = ?', (column_name, column_name, check_object)):
+            pass
+    def commit_and_close(self):
+        self.database.commit()
+        self.database.close()
+
+class Client():
+    def __init__(self, name, amount):
+        self.name = name
+        self.amount = amount
 
 
 if __name__ == "__main__":
-    db = sqlite3.connect('database.sqlite')
-    main_window()
-    commit_ = input('Would you like to commit?')
-    if commit_.upper() == 'YES':
-        db.commit()
-    else:
-        db.rollback()
-    db.close()
+    initializer()
