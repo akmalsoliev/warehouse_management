@@ -32,30 +32,27 @@ def initializer():
 
     #NOTE out of any function, since this is the primary 
     client_name_input = input('Please enter client name: ')
-    client_amount_input = int(input('Price of a sale: '))
+    client_amount_input = 13234#int(input('Price of a sale: '))
     our_client = Client(client_name_input, client_amount_input)
 
     #Creating our first table with all the information about the client
     __transactions_table = 'transactions_table'
-    __columns_in_table = ['Date', 'Client_Name', 'Sales_Transaction']
+    __columns_in_table = ['Date ','Client_Name', 'Sales_Transaction']
     db.create_table(__transactions_table, __columns_in_table)
     user_interaction(__transactions_table, db, __columns_in_table, our_client)
 
-    #Creating our first table with all the information about the client
-    # __client_table = 'client_table'
-    # __columns_in_table = ['Date', 'Client_Name', 'Total_Sales']
-    # __client_column_name = __columns_in_table[1] #"Client_Name"
-    # changable_column = __columns_in_table[2] #"Total_Sales"
-    # db.create_table(__client_table, __columns_in_table)
-    # user_interaction(__client_table, db, __columns_in_table, our_client, __client_column_name, changable_column)
-
+    #Creating VIEW
+    __total_sales_client = 'total_sales_per_client'
+    __columns_in_table = ['Date','Client_Name']
+    __sum_column = ['Sales_Transaction']
+    __order_by = ['Client_Name']
+    db.create_summary_column(__total_sales_client, __transactions_table, __columns_in_table, __sum_column, __order_by)
     db.commit_and_close()
 
 def user_interaction(table, database_class, columns_in_table, our_client):
     while True:
         insert_values = [datetime.datetime.utcnow(), our_client.name, our_client.amount]
         database_class.add_to_transaction(table, columns_in_table, insert_values)
-        # database_class.add_to_database_no_double_entry(changable_column, table, index_column, our_client.name, our_client.amount, columns_in_table, insert_values)
         quit_request = 'YES'#input('Are you done with all your requests? ')
         if quit_request.upper() == 'YES':
             break
@@ -63,6 +60,6 @@ def user_interaction(table, database_class, columns_in_table, our_client):
 if __name__ == "__main__":
     while True:
         initializer()
-        restart = input('Would you like to restart? ')
+        restart = 'No'#input('Would you like to restart? ')
         if restart.upper() != "YES":
             break

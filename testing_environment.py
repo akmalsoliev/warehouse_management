@@ -9,6 +9,6 @@ binary_file_location = str(pathlib.Path().joinpath(root_dir, r'__backup\__backup
 # pickle.dump(datetime.datetime.utcnow(), write_file)
 # write_file.close()
 
-load_file = open('__backup\__backup_timer.pickle', 'rb')
+load_file = open(r'__backup\__backup_timer.pickle', 'rb')
 loader = pickle.load(load_file)
 print(loader)

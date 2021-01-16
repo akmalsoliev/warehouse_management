@@ -17,7 +17,7 @@ class Database_Manager():
         self.list_of_objects = list_of_objects
     
     def activate_connection(self):
-        self.database = sqlite3.connect(self.database_name)
+        self.database = sqlite3.connect(self.database_name, detect_types=sqlite3.PARSE_DECLTYPES)
         
     def create_table(self, table_name, list_of_objects):
             self.database.execute(f'CREATE TABLE IF NOT EXISTS {table_name} (ID INTEGER PRIMARY KEY AUTOINCREMENT)')
@@ -64,21 +64,12 @@ class Database_Manager():
         columns = ', '.join(column_list)
         self.database.execute(f"INSERT INTO {table_name}({columns}) VALUES({placeholder})", (*insert_values,))
 
-    def add_to_database_no_double_entry(self, change_column, table_name, column_name, check_object, amount, column_list, insert_values):
-        select_column = self.database.execute(f'SELECT {change_column} FROM {table_name} WHERE {column_name} = ?', (check_object,))
-        if select_column.fetchone() == None:
-            print(f'{check_object} is a new entry, adding to database.')
-            placeholder = ','.join('?' * len(column_list))
-            columns = ', '.join(column_list)
-            self.database.execute(f"INSERT INTO {table_name}({columns}) VALUES({placeholder})", (*insert_values,))
-        else:
-            print(f'{check_object} is an existing entry, changes to {change_column} has been made.')
-            cursor = self.database.execute(f'SELECT {change_column} FROM {table_name} WHERE {column_name} = ?', (check_object,))
-            new_total_sales = cursor.fetchone()[0] + amount
-            self.database.execute(f'UPDATE {table_name} SET {change_column} = {new_total_sales} WHERE {column_name} = ?', (check_object,))
+    def create_summary_column(self, table_name, source_table, desired_columns, sum_column, group_by):
+        # self.database.execute('CREATE VIEW IF NOT EXISTS total_sales_per_client(Date, Client_Name, Total_Sales) AS SELECT Date, Client_Name, sum(Sales_Transaction) FROM transactions_table GROUP BY Client_Name ORDER BY Client_Name')
+        self.database.execute(f'CREATE VIEW IF NOT EXISTS {table_name}({desired_columns}, {table_name}) AS SELECT {desired_columns}, SUM({sum_column}) FROM {source_table} GROUP BY {group_by} ORDER BY {group_by}')
 
     def commit_and_close(self):
-        request = input('Save the database? ')
+        request = 'Yes'#input('Save the database? ')
         if request.upper() == 'YES':
             self.database.commit()
             self.database.close()
