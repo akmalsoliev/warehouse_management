@@ -1,8 +1,8 @@
 import datetime as dt
 import sqlite3, os, pickle, pathlib
-
-
+import traceback
 # Including all the imported modules for potential debugging purposes
+
 
 class Database_Manager:
     """
@@ -10,6 +10,7 @@ class Database_Manager:
     as it is vulnerable to SQL Injection attack! DO NOT LET the user set up table_name, __columns_in_table and
     list_of_objects!
     """
+    
     def __init__(self, database_name, list_of_objects=None):
         self.database_name = database_name
         self.database = None
@@ -27,11 +28,12 @@ class Database_Manager:
         to set table_name and list_of_objects as the code is vulnerable to SQL injection attack.
         NOTE: creation is a single time operations, current there are no intentions to add table header editor.
         """
+        
         self.database.execute(f'CREATE TABLE IF NOT EXISTS {table_name} (ID INTEGER PRIMARY KEY AUTOINCREMENT)')
         try:
             for obj in list_of_objects:
                 self.database.execute(f'ALTER TABLE {table_name} ADD COLUMN {obj}')
-        except:
+        except Exception:
             pass
 
     def back_up(self):
@@ -114,8 +116,11 @@ class Database_Manager:
         NOTE: first_table will be considered as base from which the columns structure will be created.
         unique_id is items' serial number/distinctive feature.
         """
-        self.database.execute(f'''CREATE VIEW IF NOT EXISTS {table_name} AS SELECT * FROM {first_table} WHERE EXISTS
-        (SELECT {unique_id} FROM {second_table} WHERE {first_table}.{unique_id} = {second_table}.{unique_id})''')
+        query = f'''CREATE VIEW IF NOT EXISTS {table_name} 
+                    AS SELECT * FROM {first_table} 
+                    WHERE EXISTS (SELECT {unique_id} FROM {second_table} 
+                    WHERE {first_table}.{unique_id} = {second_table}.{unique_id})'''
+        self.database.execute(query)
 
     def commit_and_close(self):
         """Commit all changes to database and close it."""
